@@ -1,44 +1,39 @@
-name: Python CI
+name: CI
 
 on:
-  pull_request:  # Аналог merge_request_event
-    branches:
-      - main  # Укажи свою основную ветку, если другая — замени
+  pull_request:
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.10"]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest mypy black isort flake8
+          pip install black==21.12b0 flake8==4.0.1 flake8-bugbear==22.1.11 \
+                      flake8-pie==0.15.0 isort==5.9.3 mypy==0.931 pytest==7.0.1
 
-      - name: Run pytest
-        run: pytest tests
-
-      - name: Run mypy
-        run: mypy src/
-
-      - name: Run black
-        run: black --diff --check src/
+      - name: Run Black
+        run: black --check src tests
 
       - name: Run isort
-        run: isort --check-only src/
+        run: isort --check-only src tests
 
       - name: Run flake8
-        run: flake8 src/
+        run: flake8 src tests
+
+      - name: Run mypy
+        run: mypy src
+
+      - name: Run pytest
+        run: pytest
