@@ -33,6 +33,9 @@ jobs:
       - name: Run mypy
         run: mypy src
 
-      - name: Run pytest
-        run: PYTHONPATH=src pytest tests
+      - name: Run tests with PYTHONPATH
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -la
+          PYTHONPATH=$(pwd)/src pytest tests
 
