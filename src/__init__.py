@@ -1,1 +1,1 @@
-\n
+# Package initialization
