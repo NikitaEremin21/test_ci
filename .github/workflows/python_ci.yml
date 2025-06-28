@@ -1,9 +1,9 @@
 name: Python CI
 
 on:
-  pull_request:
+  pull_request:  # Аналог merge_request_event
     branches:
-      - main
+      - main  # Укажи свою основную ветку, если другая — замени
 
 jobs:
   test:
@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
@@ -29,36 +29,16 @@ jobs:
           pip install pytest mypy black isort flake8
 
       - name: Run pytest
-        id: pytest
         run: pytest tests
-        continue-on-error: true
 
       - name: Run mypy
-        id: mypy
         run: mypy src/
-        continue-on-error: true
 
       - name: Run black
-        id: black
         run: black --diff --check src/
-        continue-on-error: true
 
       - name: Run isort
-        id: isort
         run: isort --check-only src/
-        continue-on-error: true
 
       - name: Run flake8
-        id: flake8
         run: flake8 src/
-        continue-on-error: true
-
-      - name: Fail if any check failed
-        run: |
-          FAIL=0
-          if [[ "${{ steps.pytest.outcome }}" == "failure" ]]; then echo "❌ Pytest failed"; FAIL=1; fi
-          if [[ "${{ steps.mypy.outcome }}" == "failure" ]]; then echo "❌ Mypy failed"; FAIL=1; fi
-          if [[ "${{ steps.black.outcome }}" == "failure" ]]; then echo "❌ Black failed"; FAIL=1; fi
-          if [[ "${{ steps.isort.outcome }}" == "failure" ]]; then echo "❌ Isort failed"; FAIL=1; fi
-          if [[ "${{ steps.flake8.outcome }}" == "failure" ]]; then echo "❌ Flake8 failed"; FAIL=1; fi
-          exit $FAIL
