@@ -3,7 +3,7 @@ name: Python CI
 on:
   pull_request:
     branches:
-      - main 
+      - main
 
 jobs:
   test:
@@ -28,22 +28,24 @@ jobs:
           pip install -r requirements.txt
           pip install pytest mypy black isort flake8
 
-      - name: Run pytest
-        run: pytest tests
-        continue-on-error: true
+      - name: Run all checks
+        run: |
+          set +e
+          FAIL=0
 
-      - name: Run mypy
-        run: mypy src/
-        continue-on-error: true
+          echo "=== Running pytest ==="
+          pytest tests || FAIL=1
 
-      - name: Run black
-        run: black --diff --check src/
-        continue-on-error: true
+          echo "=== Running mypy ==="
+          mypy src/ || FAIL=1
 
-      - name: Run isort
-        run: isort --check-only src/
-        continue-on-error: true
+          echo "=== Running black ==="
+          black --diff --check src/ || FAIL=1
 
-      - name: Run flake8
-        run: flake8 src/
-        continue-on-error: true
+          echo "=== Running isort ==="
+          isort --check-only src/ || FAIL=1
+
+          echo "=== Running flake8 ==="
+          flake8 src/ || FAIL=1
+
+          exit $FAIL
