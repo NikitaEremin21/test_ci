@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
@@ -28,24 +28,37 @@ jobs:
           pip install -r requirements.txt
           pip install pytest mypy black isort flake8
 
-      - name: Run all checks
+      - name: Run pytest
+        id: pytest
+        run: pytest tests
+        continue-on-error: true
+
+      - name: Run mypy
+        id: mypy
+        run: mypy src/
+        continue-on-error: true
+
+      - name: Run black
+        id: black
+        run: black --diff --check src/
+        continue-on-error: true
+
+      - name: Run isort
+        id: isort
+        run: isort --check-only src/
+        continue-on-error: true
+
+      - name: Run flake8
+        id: flake8
+        run: flake8 src/
+        continue-on-error: true
+
+      - name: Fail if any check failed
         run: |
-          set +e
           FAIL=0
-
-          echo "=== Running pytest ==="
-          pytest tests || FAIL=1
-
-          echo "=== Running mypy ==="
-          mypy src/ || FAIL=1
-
-          echo "=== Running black ==="
-          black --diff --check src/ || FAIL=1
-
-          echo "=== Running isort ==="
-          isort --check-only src/ || FAIL=1
-
-          echo "=== Running flake8 ==="
-          flake8 src/ || FAIL=1
-
+          if [[ "${{ steps.pytest.outcome }}" == "failure" ]]; then echo "❌ Pytest failed"; FAIL=1; fi
+          if [[ "${{ steps.mypy.outcome }}" == "failure" ]]; then echo "❌ Mypy failed"; FAIL=1; fi
+          if [[ "${{ steps.black.outcome }}" == "failure" ]]; then echo "❌ Black failed"; FAIL=1; fi
+          if [[ "${{ steps.isort.outcome }}" == "failure" ]]; then echo "❌ Isort failed"; FAIL=1; fi
+          if [[ "${{ steps.flake8.outcome }}" == "failure" ]]; then echo "❌ Flake8 failed"; FAIL=1; fi
           exit $FAIL
